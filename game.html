@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amalfi Blast</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cerulean: #1A5276;
+    --deep-sea: #0E3460;
+    --lemon: #F4D03F;
+    --terracotta: #C0392B;
+    --seafoam: #A9CCE3;
+    --coral: #E8614A;
+    --sage: #52796F;
+    --white: #FDFEFE;
+    --sand: #F5ECD7;
+    --sky: #D6EAF8;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #87CEEB 0%, #5BA3C9 35%, #1A5276 70%, #0E2A4A 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 20px;
+  }
+
+  /* Sky & Scene */
+  .scene-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+    background: linear-gradient(180deg, #87CEEB 0%, #5BA3C9 30%, #1A6B9A 60%, #0E3460 100%);
+  }
+
+  .sun {
+    position: fixed; top: 30px; right: 60px;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle, #FFF9C4, #F4D03F 50%, #E67E22);
+    border-radius: 50%;
+    box-shadow: 0 0 40px 15px rgba(244,208,63,0.5), 0 0 80px 30px rgba(244,208,63,0.2);
+    pointer-events: none; z-index: 1;
+  }
+
+  /* Cliffside buildings silhouette */
+  .cliffside {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 120px;
+    pointer-events: none; z-index: 1;
+    background: linear-gradient(0deg, #2C1810 0%, #3D2B1F 60%, transparent 100%);
+  }
+  .cliffside::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 90px;
+    background:
+      /* Houses silhouettes */
+      linear-gradient(0deg, #C0392B 0%, #C0392B 40%, transparent 40%) 2% / 30px 45px no-repeat,
+      linear-gradient(0deg, #F4D03F 0%, #F4D03F 50%, transparent 50%) 6% / 25px 55px no-repeat,
+      linear-gradient(0deg, #2980B9 0%, #2980B9 45%, transparent 45%) 10% / 28px 50px no-repeat,
+      linear-gradient(0deg, #E8614A 0%, #E8614A 40%, transparent 40%) 14% / 22px 42px no-repeat,
+      linear-gradient(0deg, #52796F 0%, #52796F 55%, transparent 55%) 18% / 32px 60px no-repeat,
+      linear-gradient(0deg, #C0392B 0%, #C0392B 48%, transparent 48%) 22% / 26px 52px no-repeat,
+      linear-gradient(0deg, #F4D03F 0%, #F4D03F 35%, transparent 35%) 70% / 28px 38px no-repeat,
+      linear-gradient(0deg, #2980B9 0%, #2980B9 50%, transparent 50%) 74% / 30px 55px no-repeat,
+      linear-gradient(0deg, #E8614A 0%, #E8614A 42%, transparent 42%) 78% / 24px 45px no-repeat,
+      linear-gradient(0deg, #52796F 0%, #52796F 58%, transparent 58%) 82% / 35px 62px no-repeat,
+      linear-gradient(0deg, #C0392B 0%, #C0392B 44%, transparent 44%) 87% / 27px 48px no-repeat,
+      linear-gradient(0deg, #F4D03F 0%, #F4D03F 38%, transparent 38%) 91% / 22px 40px no-repeat;
+  }
+
+  /* Water */
+  .water {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+    background: linear-gradient(180deg, #1A5276 0%, #0E2A4A 100%);
+    pointer-events: none; z-index: 2;
+    overflow: hidden;
+  }
+  .wave {
+    position: absolute; top: -10px; left: -100%;
+    width: 300%; height: 30px;
+    background: radial-gradient(ellipse at center, rgba(169,204,227,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: wave 4s linear infinite;
+  }
+  .wave:nth-child(2) { animation-delay: -2s; opacity: 0.6; }
+  .wave:nth-child(3) { animation-delay: -1s; top: 5px; opacity: 0.4; }
+  @keyframes wave { from { transform: translateX(0); } to { transform: translateX(33.33%); } }
+
+  /* Main layout */
+  .header {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 18px 20px 10px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: var(--white);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4), 0 0 30px rgba(244,208,63,0.3);
+    letter-spacing: 2px;
+  }
+  .header h1 span { color: var(--lemon); }
+  .header .subtitle {
+    font-size: 0.8rem;
+    color: var(--seafoam);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .score-row {
+    display: flex; gap: 12px; justify-content: center;
+    padding: 8px 20px;
+    position: relative; z-index: 10;
+  }
+  .score-box {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 8px 20px;
+    text-align: center;
+    color: white;
+    min-width: 100px;
+  }
+  .score-box .label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--seafoam); }
+  .score-box .value { font-size: 1.4rem; font-weight: 700; color: var(--lemon); font-family: 'Playfair Display', serif; }
+
+  /* Game area */
+  .game-area {
+    position: relative; z-index: 10;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    width: 100%; max-width: 420px;
+  }
+
+  /* Grid */
+  .grid-wrapper {
+    background: rgba(14,52,96,0.7);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(169,204,227,0.3);
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+  }
+
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(8, 42px);
+    grid-template-rows: repeat(8, 42px);
+    gap: 3px;
+  }
+
+  .cell {
+    width: 42px; height: 42px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(169,204,227,0.12);
+    transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .cell.filled {
+    border: none;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -2px 0 rgba(0,0,0,0.2);
+  }
+  /* Tile detail – a tiny window on each block */
+  .cell.filled::after {
+    content: '';
+    position: absolute;
+    top: 5px; left: 6px;
+    width: 8px; height: 8px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    box-shadow: 10px 0 0 rgba(255,255,255,0.2);
+  }
+  .cell.highlight { background: rgba(244,208,63,0.25) !important; border: 1px solid rgba(244,208,63,0.5) !important; }
+  .cell.clear-flash { animation: clearFlash 0.35s ease-out forwards; }
+  @keyframes clearFlash {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.8; box-shadow: 0 0 20px var(--lemon); }
+    100% { transform: scale(0); opacity: 0; }
+  }
+
+  /* Block colors */
+  .c0 { background: linear-gradient(135deg, #2471A3, #1A5276); } /* cobalt */
+  .c1 { background: linear-gradient(135deg, #C0392B, #96281B); } /* terracotta */
+  .c2 { background: linear-gradient(135deg, #F4D03F, #D4AC0D); } /* lemon */
+  .c3 { background: linear-gradient(135deg, #52796F, #354F52); } /* sage */
+  .c4 { background: linear-gradient(135deg, #E8614A, #C0392B); } /* coral */
+  .c5 { background: linear-gradient(135deg, #8E44AD, #6C3483); } /* lavender/bougainvillea */
+
+  /* Piece tray */
+  .piece-tray {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    background: rgba(14,52,96,0.7);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(169,204,227,0.3);
+    border-radius: 16px;
+    padding: 14px 20px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .piece-slot {
+    width: 110px; height: 110px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(169,204,227,0.15);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    position: relative;
+    flex-direction: column;
+  }
+  .piece-slot.selected {
+    background: rgba(244,208,63,0.12);
+    border-color: rgba(244,208,63,0.5);
+    transform: scale(1.05);
+    box-shadow: 0 0 16px rgba(244,208,63,0.2);
+  }
+  .piece-slot.used { opacity: 0.3; pointer-events: none; }
+
+  .piece-grid {
+    display: grid;
+    gap: 2px;
+  }
+  .piece-cell {
+    width: 18px; height: 18px;
+    border-radius: 3px;
+    border: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2);
+  }
+  .piece-cell.empty { background: transparent; box-shadow: none; }
+
+  /* Buttons */
+  .btn {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--lemon), #E67E22);
+    color: var(--deep-sea);
+    box-shadow: 0 4px 16px rgba(244,208,63,0.4);
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .controls { display: flex; gap: 10px; }
+
+  /* Overlay */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,20,40,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .overlay.hidden { display: none; }
+  .overlay-card {
+    background: linear-gradient(145deg, #1A5276, #0E2A4A);
+    border: 1px solid rgba(169,204,227,0.3);
+    border-radius: 24px;
+    padding: 40px 50px;
+    text-align: center;
+    max-width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .overlay-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--lemon);
+    margin-bottom: 10px;
+  }
+  .overlay-card p { color: var(--seafoam); margin-bottom: 24px; line-height: 1.6; }
+  .overlay-card .final-score { font-size: 3rem; color: white; font-family: 'Playfair Display', serif; font-weight: 900; }
+  .overlay-card .score-label { font-size: 0.75rem; letter-spacing: 2px; color: var(--seafoam); text-transform: uppercase; margin-bottom: 20px; }
+
+  .instructions {
+    font-size: 0.75rem;
+    color: rgba(169,204,227,0.7);
+    text-align: center;
+    padding: 0 10px 4px;
+    line-height: 1.5;
+    position: relative; z-index: 10;
+    max-width: 380px;
+  }
+
+  @media (max-width: 400px) {
+    #grid { grid-template-columns: repeat(8, 36px); grid-template-rows: repeat(8, 36px); }
+    .cell { width: 36px; height: 36px; }
+    .piece-slot { width: 90px; height: 90px; }
+    .header h1 { font-size: 2rem; }
+    .score-box { min-width: 80px; padding: 6px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene-bg"></div>
+<div class="sun"></div>
+
+<header class="header">
+  <h1>AMALFI <span>BLAST</span></h1>
+  <div class="subtitle">Riviera Block Puzzle</div>
+</header>
+
+<div class="score-row">
+  <div class="score-box">
+    <div class="label">Score</div>
+    <div class="value" id="score">0</div>
+  </div>
+  <div class="score-box">
+    <div class="label">Best</div>
+    <div class="value" id="best">0</div>
+  </div>
+  <div class="score-box">
+    <div class="label">Lines</div>
+    <div class="value" id="lines">0</div>
+  </div>
+</div>
+
+<div class="game-area">
+  <div class="grid-wrapper">
+    <div id="grid"></div>
+  </div>
+
+  <div class="piece-tray" id="pieceTray">
+    <div class="piece-slot" id="slot0" onclick="selectPiece(0)"></div>
+    <div class="piece-slot" id="slot1" onclick="selectPiece(1)"></div>
+    <div class="piece-slot" id="slot2" onclick="selectPiece(2)"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-secondary" onclick="resetGame()">New Game</button>
+  </div>
+</div>
+
+<p class="instructions">Select a block shape · Click a grid square to place it · Clear rows & columns for points</p>
+
+<div class="water">
+  <div class="wave"></div>
+  <div class="wave"></div>
+  <div class="wave"></div>
+</div>
+
+<!-- Overlays -->
+<div class="overlay hidden" id="startOverlay">
+  <div class="overlay-card">
+    <h2>Amalfi Blast</h2>
+    <p>Place colorful Amalfi blocks on the grid.<br>Fill complete rows or columns to clear them and earn points. How long can you keep the coast clear?</p>
+    <button class="btn btn-primary" onclick="startGame()">Set Sail ⛵</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="gameOverOverlay">
+  <div class="overlay-card">
+    <h2>Buona Partita!</h2>
+    <div class="final-score" id="finalScore">0</div>
+    <div class="score-label">Final Score</div>
+    <p>The tide has swept the coast.<br>Come back for another round!</p>
+    <button class="btn btn-primary" onclick="resetGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+const GRID_SIZE = 8;
+const COLORS = ['c0','c1','c2','c3','c4','c5'];
+
+// --- Piece definitions [shape arrays of [row,col] offsets] ---
+const PIECES = [
+  { cells: [[0,0],[0,1],[0,2]], name: '1x3 H' },
+  { cells: [[0,0],[1,0],[2,0]], name: '1x3 V' },
+  { cells: [[0,0],[0,1],[1,0],[1,1]], name: '2x2' },
+  { cells: [[0,0],[0,1],[0,2],[0,3]], name: '1x4 H' },
+  { cells: [[0,0],[1,0],[2,0],[3,0]], name: '1x4 V' },
+  { cells: [[0,0],[0,1],[1,1],[1,2]], name: 'S' },
+  { cells: [[0,1],[1,0],[1,1]], name: 'L small' },
+  { cells: [[0,0],[1,0],[1,1]], name: 'J small' },
+  { cells: [[0,0],[0,1],[0,2],[1,0]], name: 'L corner' },
+  { cells: [[0,0],[0,1],[0,2],[1,2]], name: 'J corner' },
+  { cells: [[0,0],[0,1],[1,0],[2,0]], name: 'tall L' },
+  { cells: [[0,0]], name: '1x1' },
+  { cells: [[0,0],[0,1]], name: '1x2 H' },
+  { cells: [[0,0],[1,0]], name: '1x2 V' },
+  { cells: [[0,0],[0,1],[0,2],[1,1]], name: 'T' },
+  { cells: [[0,1],[1,0],[1,1],[2,1]], name: 'T V' },
+  { cells: [[0,0],[1,0],[1,1],[2,1]], name: 'Z' },
+  { cells: [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]], name: '2x3' },
+  { cells: [[0,0],[0,1],[0,2],[1,0],[2,0]], name: 'big L' },
+];
+
+let grid = [];
+let score = 0;
+let best = parseInt(localStorage.getItem('amalfi_best') || '0');
+let lines = 0;
+let currentPieces = [null, null, null];
+let selectedPiece = -1;
+let hoverCell = null;
+
+function initGrid() {
+  grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
+}
+
+function randomPiece() {
+  const p = PIECES[Math.floor(Math.random() * PIECES.length)];
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  return { ...p, color };
+}
+
+function refillPieces() {
+  currentPieces = [randomPiece(), randomPiece(), randomPiece()];
+  selectedPiece = -1;
+  renderPieceTray();
+}
+
+// ---- Render ----
+function renderGrid() {
+  const gridEl = document.getElementById('grid');
+  gridEl.innerHTML = '';
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      if (grid[r][c]) {
+        cell.classList.add('filled', grid[r][c]);
+      }
+      cell.addEventListener('mouseenter', () => onCellHover(r, c));
+      cell.addEventListener('mouseleave', clearHighlight);
+      cell.addEventListener('click', () => onCellClick(r, c));
+      // Touch
+      cell.addEventListener('touchstart', (e) => { e.preventDefault(); onCellHover(r,c); }, {passive:false});
+      cell.addEventListener('touchend', (e) => { e.preventDefault(); onCellClick(r,c); }, {passive:false});
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+function getCell(r, c) {
+  return document.querySelector(`#grid .cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function onCellHover(r, c) {
+  hoverCell = { r, c };
+  clearHighlight();
+  if (selectedPiece < 0 || !currentPieces[selectedPiece]) return;
+  const piece = currentPieces[selectedPiece];
+  const canPlace = canPlacePiece(piece, r, c);
+  piece.cells.forEach(([dr, dc]) => {
+    const cr = r + dr, cc = c + dc;
+    if (cr >= 0 && cr < GRID_SIZE && cc >= 0 && cc < GRID_SIZE) {
+      const el = getCell(cr, cc);
+      if (el) el.classList.add(canPlace ? 'highlight' : 'highlight');
+    }
+  });
+}
+
+function clearHighlight() {
+  document.querySelectorAll('#grid .cell.highlight').forEach(el => el.classList.remove('highlight'));
+}
+
+function canPlacePiece(piece, r, c) {
+  return piece.cells.every(([dr, dc]) => {
+    const nr = r + dr, nc = c + dc;
+    return nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && !grid[nr][nc];
+  });
+}
+
+function onCellClick(r, c) {
+  if (selectedPiece < 0 || !currentPieces[selectedPiece]) return;
+  const piece = currentPieces[selectedPiece];
+  if (!canPlacePiece(piece, r, c)) return;
+  // Place piece
+  piece.cells.forEach(([dr, dc]) => { grid[r+dr][c+dc] = piece.color; });
+  currentPieces[selectedPiece] = null;
+  selectedPiece = -1;
+  renderGrid();
+  checkAndClear();
+  renderPieceTray();
+  if (currentPieces.every(p => p === null)) refillPieces();
+  checkGameOver();
+}
+
+function checkAndClear() {
+  const rowsToClear = [];
+  const colsToClear = [];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    if (grid[r].every(c => c !== null)) rowsToClear.push(r);
+  }
+  for (let c = 0; c < GRID_SIZE; c++) {
+    if (grid.every(row => row[c] !== null)) colsToClear.push(c);
+  }
+  const total = rowsToClear.length + colsToClear.length;
+  if (total === 0) return;
+
+  // Flash
+  const cells = [];
+  rowsToClear.forEach(r => { for (let c=0;c<GRID_SIZE;c++) cells.push([r,c]); });
+  colsToClear.forEach(c => { for (let r=0;r<GRID_SIZE;r++) cells.push([r,c]); });
+  const unique = [...new Map(cells.map(([r,c]) => [`${r},${c}`, [r,c]])).values()];
+  unique.forEach(([r,c]) => {
+    const el = getCell(r,c);
+    if (el) el.classList.add('clear-flash');
+  });
+
+  setTimeout(() => {
+    rowsToClear.forEach(r => { for (let c=0;c<GRID_SIZE;c++) grid[r][c] = null; });
+    colsToClear.forEach(c => { for (let r=0;r<GRID_SIZE;r++) grid[r][c] = null; });
+    const pts = total === 1 ? 100 : total === 2 ? 250 : total === 3 ? 450 : total * 200;
+    score += pts + unique.length * 5;
+    lines += total;
+    if (score > best) { best = score; localStorage.setItem('amalfi_best', best); }
+    updateScoreboard();
+    renderGrid();
+  }, 360);
+}
+
+function updateScoreboard() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('best').textContent = best;
+  document.getElementById('lines').textContent = lines;
+}
+
+function renderPieceTray() {
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById(`slot${i}`);
+    slot.innerHTML = '';
+    slot.className = 'piece-slot';
+    if (!currentPieces[i]) { slot.classList.add('used'); continue; }
+    if (selectedPiece === i) slot.classList.add('selected');
+    const p = currentPieces[i];
+    const rows = Math.max(...p.cells.map(([r])=>r)) + 1;
+    const cols = Math.max(...p.cells.map(([,c])=>c)) + 1;
+    const pg = document.createElement('div');
+    pg.className = 'piece-grid';
+    pg.style.gridTemplateColumns = `repeat(${cols}, 18px)`;
+    pg.style.gridTemplateRows = `repeat(${rows}, 18px)`;
+    const filled = new Set(p.cells.map(([r,c])=>`${r},${c}`));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const pc = document.createElement('div');
+        pc.className = 'piece-cell ' + (filled.has(`${r},${c}`) ? p.color : 'empty');
+        pg.appendChild(pc);
+      }
+    }
+    slot.appendChild(pg);
+  }
+}
+
+function selectPiece(i) {
+  if (!currentPieces[i]) return;
+  selectedPiece = (selectedPiece === i) ? -1 : i;
+  renderPieceTray();
+  clearHighlight();
+  if (hoverCell && selectedPiece >= 0) onCellHover(hoverCell.r, hoverCell.c);
+}
+
+function checkGameOver() {
+  const remaining = currentPieces.filter(Boolean);
+  if (remaining.length === 0) return;
+  // Check if any piece can fit anywhere
+  for (const piece of remaining) {
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        if (canPlacePiece(piece, r, c)) return; // still moves left
+      }
+    }
+  }
+  // Game over
+  setTimeout(() => {
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('gameOverOverlay').classList.remove('hidden');
+  }, 400);
+}
+
+function startGame() {
+  document.getElementById('startOverlay').classList.add('hidden');
+  initGrid();
+  score = 0; lines = 0;
+  updateScoreboard();
+  refillPieces();
+  renderGrid();
+}
+
+function resetGame() {
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  startGame();
+}
+
+// Init best display
+document.getElementById('best').textContent = best;
+document.getElementById('startOverlay').classList.remove('hidden');
+</script>
+</body>
+</html>
